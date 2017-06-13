@@ -31,27 +31,69 @@ Kafa
 - `producer_byte_rate`。发布者单位时间（每秒）内可以发布到**单台broker**的字节数。
 - `consumer_byte_rate`。消费者单位时间（每秒）内可以从**单台broker**拉取的字节数。
 
-可以使用kafka安装包中自带的脚本来配置配额：
+## 如何配置
 
+可以通过两种方式来作配额管理：
+
+- 在配置文件中指定所有client-id的统一配额。
+- 动态修改zookeeper中相关znode的值，可以配置指定`client-id`的配额。
+
+使用第一种方式，必须重启broker，而且还不能针对特定`client-id`设置。所以，推荐大家使用第二种方式。
+
+### 使用官方脚本修改配额
+
+kafka官方的二进制包中，包含了一个脚本`bin/kafka-configs.sh`，支持针对`user`，`client-id`，`(user,client-id)`等三种纬度设置配额（也是通过修改zk来实现的）。
+
+1. 配置user+clientid。例如，user为"user1"，clientid为"clientA"。
 ```sh
-# 1. 配置user+clientid。例如，user为"user1"，clientid为"clientA"。
 bin/kafka-configs.sh  --zookeeper localhost:2181 --alter --add-config 'producer_byte_rate=1024,consumer_byte_rate=2048' --entity-type users --entity-name user1 --entity-type clients --entity-name clientA
+```
 
-# 2. 配置user。例如，user为"user1"
+2. 配置user。例如，user为"user1"
+```sh
 bin/kafka-configs.sh  --zookeeper localhost:2181 --alter --add-config 'producer_byte_rate=1024,consumer_byte_rate=2048' --entity-type users --entity-name user1
+```
 
-# 3. 配置client-id。例如，client-id为"clientA"
+3. 配置client-id。例如，client-id为"clientA"
+```sh
 bin/kafka-configs.sh  --zookeeper localhost:2181 --alter --add-config 'producer_byte_rate=1024,consumer_byte_rate=2048' --entity-type clients --entity-name clientA
 ```
 
-**优先级**
+### 直接写zk来修改配额
 
-如果对一个user既配置了user+clientid，又配置了user，那么配额是如何生效的呢？
+如果我们希望能够在代码里面直接写zk来实现配额管理的话，那要怎样操作呢？
 
-## 实现原理
+假定我们在启动kafka时指定的zookeeper目录是`kafka_rootdir`。
 
-有关kafka quotas的一些实现细节，可以参考下面这篇文章：
+1. 配置user+clientid。例如，针对"user1"，"clientA"的配额是10MB/sec，其它clientid的默认配额是5MB/sec。
+    - znode: `${kafka_rootdir}/config/users/user1/clients/clientid`; value: `{"version":1,"config":{"producer_byte_rate":"10485760","consumer_byte_rate":"10485760"}}`
+    - znode: `{kafka_rootdir}/config/users/user1/clients/<default>`; value: `{"version":1,"config":{"producer_byte_rate":"5242880","consumer_byte_rate":"5242880"}}`
+2. 配置user。例如，"user2"的配额是1MB/sec，其它user的默认配额是5MB/sec。
+    - znode: `${kafka_rootdir}/config/users/user1`; value: `{"version":1,"config":{"producer_byte_rate":"1048576","consumer_byte_rate":"1048576"}}`
+    - znode: `${kafka_rootdir/config/users/<default>`; value: `{"version":1,"config":{"producer_byte_rate":"5242880","consumer_byte_rate":"5242880"}}`
+3. 配置client-id。例如，"clientB"的配额是2MB/sec，其它clientid的默认配额是1MB/sec。
+    - znode:`${kafka_rootdir}/config/clients/clientB'; value: `{"version":1,"config":{"producer_byte_rate":"2097152","consumer_byte_rate":"2097152"}}`
+    - znode:`${kafka_rootdir}/config/clients/<default>`; value: `{"version":1,"config":{"producer_byte_rate":"1048576","consumer_byte_rate":"1048576"}}`
 
-[KIP-13 - Quotas](https://cwiki.apache.org/confluence/display/KAFKA/KIP-13+-+Quotas)
+无论是使用官方的脚本工具，还是自己写zookeeper，最终都是将配置写入到zk的相应znode。所有的broker都会watch这些znode，在数据发生变更时，重新获取配额值并及时生效。为了降低配额管理的复杂度和准确度，kafka中每个broker各自管理配额。所以，上面我们配置的那些额度值都是单台broker所允许的额度值。
 
-## 测试
+## 优先级
+
+首先，我们需要明白，kafka在管理配额的时候，是以“组”的概念来管理的。而管理的对象，则是producer或consumer到broker的一条条的TCP连接。
+
+那么在进行额度管理的时候，kafka首先需要确认，这条连接属于哪个“组”，进而确定当前连接是否超过了所属“组”的总额度。
+
+在进行“组”判定的时候，依照以下的优先级顺序依次判定：
+
+```sh
+/config/users/<user>/clients/<client-id>
+/config/users/<user>/clients/<default>
+/config/users/<user>
+/config/users/<default>/clients/<client-id>
+/config/users/<default>/clients/<default>
+/config/users/<default>
+/config/clients/<client-id>
+/config/clients/<default>
+```
+
+一旦找到了符合的“组”，即中止判定过程。
