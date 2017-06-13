@@ -97,3 +97,12 @@ bin/kafka-configs.sh  --zookeeper localhost:2181 --alter --add-config 'producer_
 ```
 
 一旦找到了符合的“组”，即中止判定过程。
+
+## 超额处理
+
+如果连接超过了配额值会怎么样呢？kafka给出的处理方式是：延时回复给业务方，不使用特定返回码。
+
+具体到producer还是consumer，处理方式又有所不同：
+
+- Producer。如果Producer超额了，先把数据append到log文件，再计算延时时间，并在ProduceResponse的ThrottleTime字段填上延时的时间（v2，只在0.10.0版本以上支持）。
+- Consumer。如果Consumer超额了，先计算延时时间，在延时到期后再去从log读取数据并返回给Consumer。否则无法起到限制对文件系统的读蜂拥。在v1（0.9.0以上版本）和v2版本的FetchResponse中有ThrottleTime字段，表示因为超过配额而延时了多久。
