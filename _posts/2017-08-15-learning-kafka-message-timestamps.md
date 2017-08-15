@@ -6,12 +6,15 @@ tags: kafka
 author: ShuxiaoW
 ---
 
+* content
 {:toc}
 
 本文主要讲述kafka对消息时间戳提供的一些支持，以及kafka如何支持根据时间戳精确查找offset。
 
 
 
+
+## 0 前言
 
 得益于kafka良好的设计理念，Producer和Consumer完全独立，互不影响，各司其职即可。但是，对于消费者而言，当它从kafka拿到一条消息时，它可能会想知道，这条消息是何时发布到kafka的呢？
 
