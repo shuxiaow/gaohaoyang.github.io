@@ -2,7 +2,7 @@
 layout: post
 title:  "C++11中的右值引用用法小结"
 categories: c++
-tags: "c++11" "rvalue reference"
+tags: c++11 
 author: ShuxiaoW
 ---
 
