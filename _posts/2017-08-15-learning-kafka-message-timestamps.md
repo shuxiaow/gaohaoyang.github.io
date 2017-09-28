@@ -11,8 +11,7 @@ author: ShuxiaoW
 
 本文主要讲述kafka对消息时间戳提供的一些支持，以及kafka如何支持根据时间戳精确查找offset。
 
-
-
+HHHDDDHHH
 
 ## 1 前言
 

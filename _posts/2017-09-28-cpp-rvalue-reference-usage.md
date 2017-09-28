@@ -11,7 +11,7 @@ author: ShuxiaoW
 
 本文记录使用C++11中的右值引用的一些tips，包括何时该用右值引用。
 
-
+HHHDDDHHH
 
 ## 1 关于右值引用
 
