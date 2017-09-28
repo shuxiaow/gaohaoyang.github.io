@@ -14,7 +14,7 @@ author: ShuxiaoW
 
 
 
-## 0 前言
+## 1 前言
 
 得益于kafka良好的设计理念，Producer和Consumer完全独立，互不影响，各司其职即可。但是，对于消费者而言，当它从kafka拿到一条消息时，它可能会想知道，这条消息是何时发布到kafka的呢?
 
@@ -25,7 +25,7 @@ author: ShuxiaoW
 
 本文主要讲述kafka对消息时间戳提供的一些支持，最终能够解决上面提到的2个问题。
 
-## 1 消息中的时间戳
+## 2 消息中的时间戳
 
 ### 新的消息结构体
 
@@ -106,7 +106,7 @@ v1&v2版本多了个`ThrottleTime`字段，这个表示消费者在消费时等�
 
 另外，`FetchResponse`中`HighwaterMarkOffset`字段表示该partition当前最新的offset值，通过对比这个值和本次拉取到的最大offset，我们可以计算出还有多少消息待消费，可以作为一个评估消费者消费状态的监控指标。
 
-## 2 CreateTime Vs LogAppendTime
+## 3 CreateTime Vs LogAppendTime
 
 上面提到，`Message`结构体中的`Timestamp`有两种类型：`CreateTime`和`LogAppendTime`。具体是何种类型，取决于broker上面的配置：
 
@@ -128,7 +128,7 @@ Consumer在拉取到消息时，可以根据`attribute`的标志位判断broker�
 `message.timestamp.difference.max.ms` | topic | long | [0,...] | Long.MaxValue
 
 
-## 3 按时间戳查找offset
+## 4 按时间戳查找offset
 
 好了，说明白了消息中的时间戳字段后，我们接下来看看，如果按照时间戳来查找offset。
 
