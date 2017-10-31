@@ -32,3 +32,9 @@ TODO
 > Use rvalue references only to define move constructors and move assignment operators, or for perfect forwarding.
 
 只在3种情况下使用右值引用：定义移动构造函数；定义移动赋值操作符；实现完美转发
+
+## 5 参考资料
+
+[1] [C++ Rvalue References Explained](http://thbecker.net/articles/rvalue_references/section_01.html)
+[2] [Google C++ Style Guild](https://google.github.io/styleguide/cppguide.html#Rvalue_references)
+[3] C++ Primer 5th
