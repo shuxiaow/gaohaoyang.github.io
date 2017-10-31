@@ -36,5 +36,7 @@ TODO
 ## 5 参考资料
 
 [1] [C++ Rvalue References Explained](http://thbecker.net/articles/rvalue_references/section_01.html)
+
 [2] [Google C++ Style Guild](https://google.github.io/styleguide/cppguide.html#Rvalue_references)
+
 [3] C++ Primer 5th
