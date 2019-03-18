@@ -11,8 +11,6 @@ author: ShuxiaoW
 
 本文介绍如何在Linux上设置定时任务
 
-HHHDDDHHH
-
 ## Step 1 设置好正确的时区与时间
 
 Linux下我们可以针对每个user设置时区和crontab任务。但是，不管是哪个user，cron在执行定时任务时，总是按照cron守护进程获取到的系统时间和时区为准的。

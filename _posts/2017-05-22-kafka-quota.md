@@ -11,8 +11,6 @@ author: ShuxiaoW
 
 kafka支持配额管理，从而可以对Producer和Consumer的produce&fetch操作进行流量限制，防止个别业务压爆服务器。本文主要介绍如何使用kafka的配额管理功能。
 
-HHHDDDHHH
-
 ## Kafka Quatas简介
 
 Kafa
